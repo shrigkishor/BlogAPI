@@ -5,6 +5,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Users, UsersSchema } from './schema/user.schema';
 import { JwtModule } from '@nestjs/jwt';
 import { LocalStrategy } from './strategies/local.strategy';
+import { AccessTokenStrategy } from './strategies/access-token.strategy';
+import { UsersRepository } from './repositories/token.repository';
 
 @Module({
   imports: [
@@ -17,6 +19,6 @@ import { LocalStrategy } from './strategies/local.strategy';
     JwtModule.register({}),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy],
+  providers: [AuthService, LocalStrategy, AccessTokenStrategy,UsersRepository],
 })
 export class AuthModule {}

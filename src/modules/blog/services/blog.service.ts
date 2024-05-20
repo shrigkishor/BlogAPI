@@ -4,9 +4,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Blogs, BlogsModel } from './schema/blog.schema';
+import { Blogs, BlogsModel } from '../schema/blog.schema';
 import * as mongoose from 'mongoose';
-import { Query as ExpressQuery } from 'express-serve-static-core';
+import { PaginateQueryDto } from '../dto/query.dto';
 
 @Injectable()
 export class BlogService {
@@ -15,7 +15,7 @@ export class BlogService {
     private readonly blogModel: BlogsModel,
   ) {}
 
-  async findAllBlogs(query: ExpressQuery) {
+  async findAllBlogs(query: PaginateQueryDto) {
     const responsePerPage = 3;
     const currentPage: number = Number(query.page) || 1;
     const skip: number = responsePerPage * (currentPage - 1);
@@ -44,9 +44,12 @@ export class BlogService {
     return blog;
   }
 
-  async createNewBlog(blog: Blogs, userId: string): Promise<Blogs> {
+  async createNewBlog(
+    blog: Blogs,
+    userId: mongoose.Types.ObjectId,
+  ): Promise<Blogs> {
     const TrackedBlog = Object.assign(blog, {
-      user: new mongoose.Types.ObjectId(userId),
+      user: userId,
     });
     const res = await this.blogModel.create(TrackedBlog);
     return res;

@@ -1,8 +1,12 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
-import config from './config';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { MainModule } from './modules/main.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import config from './config';
+import { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { GlobalExceptionFilter } from './filters/global.filter';
+import { TransformPipe } from './pipes/data-transform.pipe';
+import { MongooseModule } from '@nestjs/mongoose';
+import { PaginateQueries } from './middlewares/paginate-queries.middleware';
 
 @Module({
   imports: [
@@ -17,11 +21,20 @@ import { MainModule } from './modules/main.module';
       inject: [ConfigService],
       useFactory: async (ConfigService: ConfigService) => {
         return {
-          uri: ConfigService.get('app.databaseUri'),
+          uri: ConfigService.getOrThrow('app.databaseUri')
         };
       },
     }),
     MainModule,
   ],
+  providers: [
+    { provide: APP_FILTER, useClass: GlobalExceptionFilter },
+    { provide: APP_PIPE, useClass: TransformPipe },
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  constructor(private readonly configService: ConfigService) {}
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(PaginateQueries).forRoutes('*');
+  }
+}
